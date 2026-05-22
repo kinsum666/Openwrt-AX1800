@@ -4,6 +4,31 @@
 
 PKG_PATH="$GITHUB_WORKSPACE/wrt/package/"
 
+# ---------- 自动添加 istore 软件源 ----------
+OPENWRT_ROOT="$GITHUB_WORKSPACE/wrt"
+FEEDS_CONF="$OPENWRT_ROOT/feeds.conf.default"
+
+if [ -f "$FEEDS_CONF" ]; then
+    if ! grep -q "istore" "$FEEDS_CONF"; then
+        echo "src-git istore https://github.com/linkease/istore;main" >> "$FEEDS_CONF"
+        echo "✅ Added istore feed to $FEEDS_CONF"
+
+        cd "$OPENWRT_ROOT"
+        ./scripts/feeds update istore
+        ./scripts/feeds install -d y -p istore luci-app-store
+        cd - > /dev/null
+    else
+        echo "ℹ️ istore feed already exists in $FEEDS_CONF"
+    fi
+else
+    echo "⚠️ Warning: $FEEDS_CONF not found! Please check OPENWRT_ROOT path."
+fi
+# -------------------------------------------
+
+# 自定义版本显示
+sed -i "s/OpenWrt /Kinsum Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
+# -----------------------------------------
+
 #预置HomeProxy数据
 if [ -d *"homeproxy"* ]; then
 	echo " "
