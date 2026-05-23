@@ -1,43 +1,21 @@
 #!/bin/bash
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 VIKINGYFY
-
-PKG_PATH="$GITHUB_WORKSPACE/wrt/package/"
-
 # ---------- 自动添加 istore 软件源 ----------
+PKG_PATH="$GITHUB_WORKSPACE/wrt/package/"
 OPENWRT_ROOT="$GITHUB_WORKSPACE/wrt"
 FEEDS_CONF="$OPENWRT_ROOT/feeds.conf.default"
-
 if [ -f "$FEEDS_CONF" ]; then
     if ! grep -q "istore" "$FEEDS_CONF"; then
         echo "src-git istore https://github.com/linkease/istore;main" >> "$FEEDS_CONF"
-        echo "✅ Added istore feed to $FEEDS_CONF"
-
         cd "$OPENWRT_ROOT"
         ./scripts/feeds update istore
         ./scripts/feeds install -d y -p istore luci-app-store
         cd - > /dev/null
-		
     else
-        echo "ℹ️ istore feed already exists in $FEEDS_CONF"
+        echo "ℹ️ istore feed already exists"
     fi
-else
-    echo "⚠️ Warning: $FEEDS_CONF not found! Please check OPENWRT_ROOT path."
 fi
-
-
-# -------------------------------------------
- # 无论是否首次添加，都修复版本号（放在 if 外部，但仍在 OPENWRT_ROOT 有效范围内）
-    ISTORE_MAKEFILE="$OPENWRT_ROOT/feeds/istore/luci/luci-app-store/Makefile"
-    if [ -f "$ISTORE_MAKEFILE" ]; then
-        sed -i 's/\(PKG_VERSION:=.*\)-\([0-9]\+\)/\1-r\2/' "$ISTORE_MAKEFILE"
-		sed -i '/PKG_RELEASE:=/d' "$ISTORE_MAKEFILE"
-        sed -i 's/\(VERSION:=.*\)-\([0-9]\+\)/\1.\2/' "$ISTORE_MAKEFILE"
-        echo "✅ Fixed luci-app-store version for APK"
-    else
-        echo "⚠️ luci-app-store Makefile not found, skip version fix."
-    fi
-
 
 # -------------------------------------------
 
@@ -133,27 +111,20 @@ if [ -f "$RUST_FILE" ]; then
 
 	cd $PKG_PATH && echo "rust has been fixed!"
 fi
-# ... 前面的内容保持不变 ...
 
-# 自定义版本显示（你的原有代码）
-sed -i "s/OpenWrt /Kinsum Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
-
-# ... 其他定制操作（homeproxy、argon等）保持不变 ...
-
-# ========== 最后，确保 luci-app-store 版本正确并清理 ==========
+# ========== 关键修复：luci-app-store 版本号 ==========
 cd "$OPENWRT_ROOT"
 
-# 修复版本号（再次确认）
 ISTORE_MAKEFILE="feeds/istore/luci/luci-app-store/Makefile"
 if [ -f "$ISTORE_MAKEFILE" ]; then
     sed -i 's/\(PKG_VERSION:=.*\)-\([0-9]\+\)/\1-r\2/' "$ISTORE_MAKEFILE"
     sed -i '/PKG_RELEASE:=/d' "$ISTORE_MAKEFILE"
     echo "✅ Fixed luci-app-store version to apk-compatible"
-    # 清理旧构建产物
+    # 清理旧的构建缓存
     make package/feeds/istore/luci-app-store/clean
 else
     echo "⚠️ Makefile not found, skip fix"
 fi
 
-# 开始编译（根据你的实际命令修改）
+# 开始编译
 make V=s
