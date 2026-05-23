@@ -133,3 +133,27 @@ if [ -f "$RUST_FILE" ]; then
 
 	cd $PKG_PATH && echo "rust has been fixed!"
 fi
+# ... 前面的内容保持不变 ...
+
+# 自定义版本显示（你的原有代码）
+sed -i "s/OpenWrt /Kinsum Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
+
+# ... 其他定制操作（homeproxy、argon等）保持不变 ...
+
+# ========== 最后，确保 luci-app-store 版本正确并清理 ==========
+cd "$OPENWRT_ROOT"
+
+# 修复版本号（再次确认）
+ISTORE_MAKEFILE="feeds/istore/luci/luci-app-store/Makefile"
+if [ -f "$ISTORE_MAKEFILE" ]; then
+    sed -i 's/\(PKG_VERSION:=.*\)-\([0-9]\+\)/\1-r\2/' "$ISTORE_MAKEFILE"
+    sed -i '/PKG_RELEASE:=/d' "$ISTORE_MAKEFILE"
+    echo "✅ Fixed luci-app-store version to apk-compatible"
+    # 清理旧构建产物
+    make package/feeds/istore/luci-app-store/clean
+else
+    echo "⚠️ Makefile not found, skip fix"
+fi
+
+# 开始编译（根据你的实际命令修改）
+make V=s
