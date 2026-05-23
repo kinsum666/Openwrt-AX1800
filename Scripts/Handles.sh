@@ -30,7 +30,8 @@ fi
  # 无论是否首次添加，都修复版本号（放在 if 外部，但仍在 OPENWRT_ROOT 有效范围内）
     ISTORE_MAKEFILE="$OPENWRT_ROOT/feeds/istore/luci/luci-app-store/Makefile"
     if [ -f "$ISTORE_MAKEFILE" ]; then
-        sed -i 's/\(PKG_VERSION:=.*\)-\([0-9]\+\)/\1.\2/' "$ISTORE_MAKEFILE"
+        sed -i 's/\(PKG_VERSION:=.*\)-\([0-9]\+\)/\1-r\2/' "$ISTORE_MAKEFILE"
+		sed -i '/PKG_RELEASE:=/d' "$ISTORE_MAKEFILE"
         sed -i 's/\(VERSION:=.*\)-\([0-9]\+\)/\1.\2/' "$ISTORE_MAKEFILE"
         echo "✅ Fixed luci-app-store version for APK"
     else
