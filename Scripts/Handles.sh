@@ -17,6 +17,9 @@ if [ -f "$FEEDS_CONF" ]; then
     fi
 fi
 
+
+
+
 # -------------------------------------------
 
 # 自定义版本显示
@@ -116,27 +119,17 @@ fi
 # ========== 强制修复 luci-app-store 版本号 ==========
 cd "$OPENWRT_ROOT"
 
-ISTORE_MAKEFILE="feeds/istore/luci/luci-app-store/Makefile"
+# 1. 直接硬编码版本号（不依赖拼接）
+sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:=0.1.32-r1/' feeds/istore/luci/luci-app-store/Makefile
+sed -i '/^PKG_RELEASE:=/d' feeds/istore/luci/luci-app-store/Makefile   # 删除 PKG_RELEASE
+# 2. 防止 luci.mk 重新拼接：强制设置 PKG_RELEASE 为空
+echo 'PKG_RELEASE:=' >> feeds/istore/luci/luci-app-store/Makefile
 
-if [ -f "$ISTORE_MAKEFILE" ]; then
-    # 1. 直接替换版本号，不使用正则拼接
-    sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:=0.1.32-r1/' "$ISTORE_MAKEFILE"
-    # 2. 删除或注释 PKG_RELEASE 行
-    sed -i '/^PKG_RELEASE:=/d' "$ISTORE_MAKEFILE"
-    # 3. 额外添加一行 PKG_RELEASE:=0（防止未定义时默认值干扰）
-    echo 'PKG_RELEASE:=0' >> "$ISTORE_MAKEFILE"
-    
-    echo "✅ 强制修改版本为 0.1.32-r1"
-    echo "当前版本定义："
-    grep -E '^(PKG_VERSION|PKG_RELEASE):=' "$ISTORE_MAKEFILE"
-    
-    # 4. 彻底清理该包的所有构建残留
-    rm -rf build_dir/target-*/luci-app-store
-    rm -rf staging_dir/target-*/pkginfo/luci-app-store*
-    make package/feeds/istore/luci-app-store/clean
-else
-    echo "⚠️ Makefile 不存在"
-fi
+# 3. 彻底清理该包的所有残留（包括 staging_dir 和 bin）
+rm -rf build_dir/target-*/luci-app-store
+rm -rf staging_dir/target-*/pkginfo/luci-app-store*
+make package/feeds/istore/luci-app-store/clean
 
-# 开始编译
-make V=s
+# 4. 验证修改
+grep '^PKG_VERSION:' feeds/istore/luci/luci-app-store/Makefile
+
