@@ -148,6 +148,14 @@ jobs:
             echo "caches cleanup done!"
           fi
 
+      # Add OAF Feed ===========
+      - name: Add OAF Feed
+        run: |
+          cd ./wrt/
+          if ! grep -q "openappfilter" feeds.conf.default; then
+            echo "src-git openappfilter https://github.com/destan19/OpenAppFilter.git" >> feeds.conf.default
+          fi
+     #=================
       - name: Update Feeds
         run: |
           cd ./wrt/
