@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright (C) 2026 VIKINGYFY
+# Copyright (C) 2026 
 
 #CI项目
 name: QCA-ALL
@@ -44,25 +44,4 @@ jobs:
     with:
       #编译配置
       WRT_CONFIG: ${{matrix.CONFIG}}
-      #默认主题
-      WRT_THEME: bootstrap
-      #默认主机名
-      WRT_NAME: Titok
-      #默认WIFI名称
-      WRT_SSID: Titok
-      #默认WIFI密码
-      WRT_WORD: yunding888
-      #默认地址
-      WRT_IP: 192.168.188.1
-      #默认密码，仅作提示，修改无用
-      WRT_PW: erlang
-      #源码链接
-      WRT_REPO: https://github.com/${{matrix.SOURCE}}.git
-      #源码分支
-      WRT_BRANCH: ${{matrix.BRANCH}}
-      #源码名称
-      WRT_SOURCE: ${{matrix.SOURCE}}
-      #插件调整
-      WRT_PACKAGE: ${{inputs.PACKAGE}}
-      #仅输出配置文件
-      WRT_TEST: ${{inputs.TEST}}
+
