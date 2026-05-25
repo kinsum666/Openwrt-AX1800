@@ -7,6 +7,12 @@ PKG_PATH="$OPENWRT_ROOT/package/"
 
 cd "$OPENWRT_ROOT" || exit 1
 
+# 添加 OAF 源到 feeds.conf.default
+if ! grep -q "openappfilter" feeds.conf.default; then
+    echo "src-git openappfilter https://github.com/destan19/OpenAppFilter.git" >> feeds.conf.default
+    echo "OAF feed added"
+fi
+
 # 自定义版本显示
 sed -i "s/OpenWrt /Kinsum Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
 
@@ -84,3 +90,4 @@ if [ -f "$RUST_FILE" ]; then
     sed -i 's/ci-llvm=true/ci-llvm=false/g' "$RUST_FILE"
     echo "rust has been fixed!"
 fi
+
