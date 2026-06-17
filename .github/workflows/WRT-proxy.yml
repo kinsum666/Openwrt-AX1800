@@ -205,57 +205,88 @@ jobs:
           make -j$(nproc) || make -j1 V=s
 
       # ================= 新增：打包四个代理及依赖 =================
+      # ================= 打包四个代理及依赖 =================
       - name: Collect Proxy Packages
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-          # 创建 upload 目录，确保后续 mv 成功
+          # 创建 upload 目录
           mkdir -p ./upload
 
-          # 获取架构目录名（比如 arm_cortex-a7）
+          # 获取架构目录名（如 aarch64_cortex-a53）
           ARCH_DIR=$(find bin/packages -mindepth 1 -maxdepth 1 -type d | head -1 | xargs basename)
           echo "ARCH_DIR=$ARCH_DIR"
 
-          # 要收集的四个主包
+          # 要收集的主包列表
           TARGET_PKGS="luci-app-passwall luci-app-passwall2 luci-app-openclash luci-app-ssr-plus"
 
-          # 创建临时目录
-          mkdir -p proxy_pkgs
+          # 临时文件
+          PKG_LIST_TMP=$(mktemp)
+          DEP_LIST_TMP=$(mktemp)
 
-          # 从本地 Packages 文件中递归解析依赖
-          # 遍历所有 Packages 文件（base/luci/packages/routing等）
+          # 遍历所有 Packages 文件
           for pkg_index in $(find bin/packages/$ARCH_DIR -name Packages); do
-            # 提取所有包的 Package 和 Depends 信息
-            awk -v pkgs="$TARGET_PKGS" '
-              BEGIN { split(pkgs, targets, " "); for(i in targets) want[targets[i]]=1 }
-              /^Package:/ { pkg=$2 }
-              /^Depends:/ { deps=$0; gsub(/^Depends:[ \t]+/, "", deps); dep[pkg]=deps }
-              /^Filename:/ { file[pkg]=$2 }
+            # 提取包名、依赖、文件名
+            awk -v pkg_index="$pkg_index" -v targets="$TARGET_PKGS" '
+              BEGIN {
+                split(targets, t, " ");
+                for(i in t) want[t[i]]=1;
+              }
+              /^Package:/ { pkg=$2; next }
+              /^Depends:/ { 
+                deps=$0;
+                sub(/^Depends:[ \t]+/, "", deps);
+                dep[pkg]=deps;
+                next;
+              }
+              /^Filename:/ { 
+                file[pkg]=$2;
+                # 输出该包的文件路径（相对于当前目录）
+                dir=dirname(pkg_index);
+                full=dir "/" file[pkg];
+                pkg_path[pkg]=full;
+                next;
+              }
               END {
                 # 递归收集依赖
                 function add(p) {
-                  if (p in visited) return
-                  visited[p]=1
-                  if (p in file) print file[p]
+                  if (p in visited) return;
+                  visited[p]=1;
+                  if (p in pkg_path) {
+                    print pkg_path[p];
+                  } else {
+                    # 如果未找到文件，可能包未被编译，跳过
+                    print "WARNING: package " p " not found in Packages" > "/dev/stderr";
+                  }
                   if (p in dep) {
-                    n = split(dep[p], arr, /[ ,]+/)
-                    for (i=1; i<=n; i++) {
-                      sub(/[ \t]+$/, "", arr[i])
-                      # 去掉版本号 (>= ...) 等
-                      gsub(/\(.*\)/, "", arr[i])
-                      if (arr[i] != "") add(arr[i])
+                    split(dep[p], arr, /[ ,]+/);
+                    for(i in arr) {
+                      pkg_name=arr[i];
+                      gsub(/\(.*\)/, "", pkg_name);  # 去掉版本
+                      gsub(/[ \t]+$/, "", pkg_name);
+                      if (pkg_name != "") add(pkg_name);
                     }
                   }
                 }
-                for (p in want) add(p)
+                for (p in want) add(p);
               }
-            ' $(dirname $pkg_index)/Packages >> proxy_files.tmp
+              function dirname(f) {
+                sub(/\/[^\/]*$/, "", f);
+                return f;
+              }
+            ' $pkg_index >> $DEP_LIST_TMP
           done
 
-          # 去重并复制对应的 ipk
-          if [ -s proxy_files.tmp ]; then
-            sort -u proxy_files.tmp | while read -r ipk; do
-              find bin/packages/$ARCH_DIR -name "$(basename $ipk)" -exec cp {} proxy_pkgs/ \;
+          # 去重并复制
+          mkdir -p proxy_pkgs
+          if [ -s $DEP_LIST_TMP ]; then
+            sort -u $DEP_LIST_TMP | while read -r filepath; do
+              if [ -f "$filepath" ]; then
+                echo "Copying: $filepath"
+                cp "$filepath" proxy_pkgs/
+              else
+                echo "Warning: file $filepath not found, skip"
+              fi
             done
           else
             echo "警告：未找到任何代理包，改为打包整个 $ARCH_DIR 目录"
@@ -263,10 +294,16 @@ jobs:
           fi
 
           # 打包
-          tar -czf proxy-packages-${WRT_TARGET}.tar.gz -C proxy_pkgs .
-          mv proxy-packages-${WRT_TARGET}.tar.gz ./upload/
-          rm -rf proxy_pkgs proxy_files.tmp
+          if [ "$(ls -A proxy_pkgs)" ]; then
+            tar -czf proxy-packages-${WRT_TARGET}.tar.gz -C proxy_pkgs .
+            mv proxy-packages-${WRT_TARGET}.tar.gz ./upload/
+            echo "代理包打包完成，共 $(ls proxy_pkgs | wc -l) 个 ipk"
+          else
+            echo "错误：proxy_pkgs 为空，无法打包"
+            exit 1
+          fi
 
+          rm -rf proxy_pkgs $DEP_LIST_TMP $PKG_LIST_TMP
       # ================= 结束新增 =================
 
       - name: Machine Information
