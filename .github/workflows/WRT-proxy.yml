@@ -2,7 +2,7 @@
 # Copyright (C) 2026 
 
 #云编译公用核心
-name: WRT-CORE
+name: WRT-proxy
 
 on:
   workflow_call:
