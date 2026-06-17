@@ -209,6 +209,9 @@ jobs:
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
+          # 创建 upload 目录，确保后续 mv 成功
+          mkdir -p ./upload
+
           # 获取架构目录名（比如 arm_cortex-a7）
           ARCH_DIR=$(find bin/packages -mindepth 1 -maxdepth 1 -type d | head -1 | xargs basename)
           echo "ARCH_DIR=$ARCH_DIR"
