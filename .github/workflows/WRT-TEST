@@ -60,15 +60,15 @@ jobs:
       #默认主题
       WRT_THEME: bootstrap
       #默认主机名
-      WRT_NAME: kwrt
+      WRT_NAME: Kinsum
       #默认WIFI名称
-      WRT_SSID: kwrt
+      WRT_SSID: Titok
       #默认WIFI密码
       WRT_WORD: yunding888  
       #默认地址
       WRT_IP: 192.168.188.1
       #默认密码，仅作提示，修改无用
-      WRT_PW: 无
+      WRT_PW: erlang
       #源码链接
       WRT_REPO: https://github.com/${{inputs.SOURCE}}.git
       #源码分支
