@@ -7,11 +7,24 @@ PKG_PATH="$OPENWRT_ROOT/package/"
 
 cd "$OPENWRT_ROOT" || exit 1
 
+# ========== 新增：代理软件 feeds ==========
 # 添加 OAF 源到 feeds.conf.default
 if ! grep -q "openappfilter" feeds.conf.default; then
     echo "src-git openappfilter https://github.com/destan19/OpenAppFilter.git" >> feeds.conf.default
     echo "OAF feed added"
 fi
+
+if ! grep -q "src-git kenzok8" feeds.conf.default; then
+    echo "src-git kenzok8 https://github.com/kenzok8/openwrt-packages.git" >> feeds.conf.default
+fi
+if ! grep -q "src-git small" feeds.conf.default; then
+    echo "src-git small https://github.com/kenzok8/small.git" >> feeds.conf.default
+fi
+if ! grep -q "src-git openclash" feeds.conf.default; then
+    echo "src-git openclash https://github.com/vernesong/OpenClash.git" >> feeds.conf.default
+fi
+echo "proxy feeds added"
+# ==========================================
 
 # 自定义版本显示
 sed -i "s/OpenWrt /Kinsum Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
