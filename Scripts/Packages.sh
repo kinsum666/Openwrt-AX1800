@@ -2,6 +2,31 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 VIKINGYFY
 
+
+# ========== 添加 iStore 及 Docker 相关 feeds 源 ==========
+echo "正在添加 iStore 源..."
+cd ..  # 回到 wrt 根目录
+
+# 检查并追加 feeds 源
+if ! grep -q "istore" feeds.conf.default; then
+    echo 'src-git istore https://github.com/linkease/istore.git;main' >> feeds.conf.default
+    echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
+    echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
+    echo "iStore 源已添加"
+else
+    echo "iStore 源已存在，跳过添加"
+fi
+
+# 更新并安装 iStore 相关 feeds（只更新新增的，不重复更新全部）
+./scripts/feeds update istore nas nas_luci
+./scripts/feeds install -a -p istore
+./scripts/feeds install -a -p nas
+./scripts/feeds install -a -p nas_luci
+
+cd package  # 回到 package 目录继续执行原有逻辑
+
+# ========== 原有更新包函数 ==========
+
 #安装和更新软件包
 UPDATE_PACKAGE() {
 	local PKG_NAME=$1
