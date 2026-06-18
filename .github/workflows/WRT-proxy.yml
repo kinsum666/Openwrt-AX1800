@@ -210,20 +210,31 @@ jobs:
         run: |
           cd ./wrt/
 
+          echo "=== 当前工作目录 ==="
+          pwd
+          echo "=== bin/packages 目录结构 ==="
+          ls -R bin/packages || echo "bin/packages 不存在"
+
           # 确保 upload 目录存在
           mkdir -p ./upload
 
-          # 获取架构目录名（如 aarch64_cortex-a53）
+          # 获取架构目录名
           ARCH_DIR=$(find bin/packages -mindepth 1 -maxdepth 1 -type d | head -1 | xargs basename)
           echo "ARCH_DIR=$ARCH_DIR"
 
-          # 创建临时目录存放 ipk
+          # 创建临时目录
           mkdir -p proxy_pkgs
 
-          # 仅复制当前架构目录下的所有 ipk 文件
+          # 复制 ipk（递归搜索所有子目录）
           find bin/packages/$ARCH_DIR -name "*.ipk" -exec cp {} proxy_pkgs/ \;
 
-          # 检查是否有文件被复制
+          # 如果架构目录下没有，尝试全局搜索（但仅警告）
+          if [ -z "$(ls -A proxy_pkgs 2>/dev/null)" ]; then
+            echo "⚠️ 架构目录下未找到 ipk，尝试搜索整个 bin/packages"
+            find bin/packages -name "*.ipk" -exec cp {} proxy_pkgs/ \;
+          fi
+
+          # 打包
           if [ "$(ls -A proxy_pkgs 2>/dev/null)" ]; then
             tar -czf proxy-packages-${WRT_TARGET}.tar.gz -C proxy_pkgs .
             mv proxy-packages-${WRT_TARGET}.tar.gz ./upload/
@@ -232,7 +243,6 @@ jobs:
             echo "⚠️ 未找到任何 ipk 文件，跳过打包"
           fi
 
-          # 清理临时目录
           rm -rf proxy_pkgs
      
       # ==================================
