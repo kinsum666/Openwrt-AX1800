@@ -204,108 +204,38 @@ jobs:
 
           make -j$(nproc) || make -j1 V=s
 
-      # ================= 新增：打包四个代理及依赖 =================
-      # ================= 打包四个代理及依赖 =================
+            # ================= 打包代理及其依赖（复制所有 ipk） =================
       - name: Collect Proxy Packages
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-          # 创建 upload 目录
+
+          # 确保 upload 目录存在
           mkdir -p ./upload
 
           # 获取架构目录名（如 aarch64_cortex-a53）
           ARCH_DIR=$(find bin/packages -mindepth 1 -maxdepth 1 -type d | head -1 | xargs basename)
           echo "ARCH_DIR=$ARCH_DIR"
 
-          # 要收集的主包列表
-          TARGET_PKGS="luci-app-passwall luci-app-passwall2 luci-app-openclash luci-app-ssr-plus"
-
-          # 临时文件
-          PKG_LIST_TMP=$(mktemp)
-          DEP_LIST_TMP=$(mktemp)
-
-          # 遍历所有 Packages 文件
-          for pkg_index in $(find bin/packages/$ARCH_DIR -name Packages); do
-            # 提取包名、依赖、文件名
-            awk -v pkg_index="$pkg_index" -v targets="$TARGET_PKGS" '
-              BEGIN {
-                split(targets, t, " ");
-                for(i in t) want[t[i]]=1;
-              }
-              /^Package:/ { pkg=$2; next }
-              /^Depends:/ { 
-                deps=$0;
-                sub(/^Depends:[ \t]+/, "", deps);
-                dep[pkg]=deps;
-                next;
-              }
-              /^Filename:/ { 
-                file[pkg]=$2;
-                # 输出该包的文件路径（相对于当前目录）
-                dir=dirname(pkg_index);
-                full=dir "/" file[pkg];
-                pkg_path[pkg]=full;
-                next;
-              }
-              END {
-                # 递归收集依赖
-                function add(p) {
-                  if (p in visited) return;
-                  visited[p]=1;
-                  if (p in pkg_path) {
-                    print pkg_path[p];
-                  } else {
-                    # 如果未找到文件，可能包未被编译，跳过
-                    print "WARNING: package " p " not found in Packages" > "/dev/stderr";
-                  }
-                  if (p in dep) {
-                    split(dep[p], arr, /[ ,]+/);
-                    for(i in arr) {
-                      pkg_name=arr[i];
-                      gsub(/\(.*\)/, "", pkg_name);  # 去掉版本
-                      gsub(/[ \t]+$/, "", pkg_name);
-                      if (pkg_name != "") add(pkg_name);
-                    }
-                  }
-                }
-                for (p in want) add(p);
-              }
-              function dirname(f) {
-                sub(/\/[^\/]*$/, "", f);
-                return f;
-              }
-            ' $pkg_index >> $DEP_LIST_TMP
-          done
-
-          # 去重并复制
+          # 创建临时目录存放 ipk
           mkdir -p proxy_pkgs
-          if [ -s $DEP_LIST_TMP ]; then
-            sort -u $DEP_LIST_TMP | while read -r filepath; do
-              if [ -f "$filepath" ]; then
-                echo "Copying: $filepath"
-                cp "$filepath" proxy_pkgs/
-              else
-                echo "Warning: file $filepath not found, skip"
-              fi
-            done
-          else
-            echo "警告：未找到任何代理包，改为打包整个 $ARCH_DIR 目录"
-            find bin/packages/$ARCH_DIR -name "*.ipk" -exec cp {} proxy_pkgs/ \;
-          fi
 
-          # 打包
-          if [ "$(ls -A proxy_pkgs)" ]; then
+          # 仅复制当前架构目录下的所有 ipk 文件
+          find bin/packages/$ARCH_DIR -name "*.ipk" -exec cp {} proxy_pkgs/ \;
+
+          # 检查是否有文件被复制
+          if [ "$(ls -A proxy_pkgs 2>/dev/null)" ]; then
             tar -czf proxy-packages-${WRT_TARGET}.tar.gz -C proxy_pkgs .
             mv proxy-packages-${WRT_TARGET}.tar.gz ./upload/
-            echo "代理包打包完成，共 $(ls proxy_pkgs | wc -l) 个 ipk"
+            echo "✅ 代理包打包完成，共 $(ls proxy_pkgs | wc -l) 个 ipk"
           else
-            echo "错误：proxy_pkgs 为空，无法打包"
-            exit 1
+            echo "⚠️ 未找到任何 ipk 文件，跳过打包"
           fi
 
-          rm -rf proxy_pkgs $DEP_LIST_TMP $PKG_LIST_TMP
-      # ================= 结束新增 =================
-
+          # 清理临时目录
+          rm -rf proxy_pkgs
+     
+      # ==================================
       - name: Machine Information
         run: |
           cd ./wrt/
