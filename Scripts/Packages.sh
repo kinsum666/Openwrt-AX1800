@@ -4,10 +4,11 @@
 
 
 
-# ========== 添加 iStore 及 Docker 相关 feeds 源（使用相对路径，不切换目录） ==========
+
+
+# ========== 添加 iStore 及 Docker 相关 feeds 源（不切换目录） ==========
 echo "正在添加 iStore 源..."
 
-# 检查并追加 feeds 源（上级目录的 feeds.conf.default）
 if ! grep -q "istore" ../feeds.conf.default; then
     echo 'src-git istore https://github.com/linkease/istore.git;main' >> ../feeds.conf.default
     echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> ../feeds.conf.default
@@ -17,7 +18,6 @@ else
     echo "iStore 源已存在，跳过添加"
 fi
 
-# 更新并安装 iStore 相关 feeds（仍使用上级目录的 scripts/feeds）
 ../scripts/feeds update istore nas nas_luci
 ../scripts/feeds install -a -p istore
 ../scripts/feeds install -a -p nas
@@ -25,6 +25,24 @@ fi
 
 echo "iStore feeds 安装完成"
 
+# ========== 以下保持原函数不变 ==========
+# 安装和更新软件包
+UPDATE_PACKAGE() {
+    # ...（您的原函数内容，完全不变） ...
+}
+# 后续所有 UPDATE_PACKAGE 调用...
+# UPDATE_VERSION 函数...
+# 私有扩展脚本...
+
+
+# ========== 以下保持原函数不变 ==========
+# 安装和更新软件包
+UPDATE_PACKAGE() {
+    # ...（您的原函数内容，完全不变） ...
+}
+# 后续所有 UPDATE_PACKAGE 调用...
+# UPDATE_VERSION 函数...
+# 私有扩展脚本...
 # ========== 原有更新包函数 ==========
 
 #安装和更新软件包
