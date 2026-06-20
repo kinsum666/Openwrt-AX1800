@@ -104,3 +104,12 @@ if [ -f "$RUST_FILE" ]; then
     echo "rust has been fixed!"
 fi
 
+
+# 创建 crontab 文件，设置定时开关灯
+mkdir -p ./files/etc/crontabs
+cat > ./files/etc/crontabs/root << "EOF"
+# 每天 23:00 关闭 LED
+0 23 * * * uci set athena_led.config.enable='0' && uci commit athena_led && /etc/init.d/athena_led reload
+# 每天 07:00 开启 LED
+0 7 * * * uci set athena_led.config.enable='1' && uci commit athena_led && /etc/init.d/athena_led reload
+EOF
