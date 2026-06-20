@@ -3,23 +3,23 @@
 # Copyright (C) 2026 VIKINGYFY
 
 # ========== 添加 iStore 及 Docker 相关 feeds 源 ==========
-echo "正在添加 iStore 源..."
+# echo "正在添加 iStore 源..."
 
-if ! grep -q "istore" ../feeds.conf.default; then
-    echo 'src-git istore https://github.com/linkease/istore.git;main' >> ../feeds.conf.default
-    echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> ../feeds.conf.default
-    echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> ../feeds.conf.default
-    echo "iStore 源已添加"
-else
-    echo "iStore 源已存在，跳过添加"
-fi
+# if ! grep -q "istore" ../feeds.conf.default; then
+#     echo 'src-git istore https://github.com/linkease/istore.git;main' >> ../feeds.conf.default
+#     echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> ../feeds.conf.default
+#     echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> ../feeds.conf.default
+#     echo "iStore 源已添加"
+# else
+#     echo "iStore 源已存在，跳过添加"
+# fi
 
-../scripts/feeds update istore nas nas_luci
-../scripts/feeds install -a -p istore
-../scripts/feeds install -a -p nas
-../scripts/feeds install -a -p nas_luci
+# ../scripts/feeds update istore nas nas_luci
+# # ../scripts/feeds install -a -p istore
+# ../scripts/feeds install -a -p nas
+# ../scripts/feeds install -a -p nas_luci
 
-echo "iStore feeds 安装完成"
+# echo "iStore feeds 安装完成"
 
 # ========== 原有函数（已修正括号） ==========
 UPDATE_PACKAGE() {
