@@ -77,3 +77,20 @@ if [[ "${WRT_TARGET^^}" == *"QUALCOMMAX"* ]]; then
 		echo "qualcommax set up nowifi successfully!"
 	fi
 fi
+
+
+
+# 引入私有扩展配置
+if [ -f "$GITHUB_WORKSPACE/Config/PRIVATE.txt" ]; then
+    echo "Applying private configurations from PRIVATE.txt..."
+    cat $GITHUB_WORKSPACE/Config/PRIVATE.txt >> ./.config
+fi
+
+# 手动调整的插件
+if [ -n "$WRT_PACKAGE" ]; then
+    echo -e "$WRT_PACKAGE" >> ./.config
+fi
+
+# ===== 新增修复 =====
+echo "CONFIG_PACKAGE_zram-swap=y" >> ./.config
+# ===================
