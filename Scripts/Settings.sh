@@ -78,19 +78,12 @@ if [[ "${WRT_TARGET^^}" == *"QUALCOMMAX"* ]]; then
 	fi
 fi
 
+# ===== 新增内容开始 =====
+# 1. 设置 root 密码为 erlang
+ROOT_PWD_HASH=$(openssl passwd -1 'erlang')
+mkdir -p ./files/etc
+echo "root:${ROOT_PWD_HASH}:0:0:99999:7:::" > ./files/etc/shadow
 
-
-# 引入私有扩展配置
-if [ -f "$GITHUB_WORKSPACE/Config/PRIVATE.txt" ]; then
-    echo "Applying private configurations from PRIVATE.txt..."
-    cat $GITHUB_WORKSPACE/Config/PRIVATE.txt >> ./.config
-fi
-
-# 手动调整的插件
-if [ -n "$WRT_PACKAGE" ]; then
-    echo -e "$WRT_PACKAGE" >> ./.config
-fi
-
-# ===== 新增修复 =====
+# 2. 启用 zram-swap 解决编译错误
 echo "CONFIG_PACKAGE_zram-swap=y" >> ./.config
-# ===================
+# ===== 新增内容结束 =====
