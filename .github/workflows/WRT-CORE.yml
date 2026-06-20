@@ -196,7 +196,9 @@ jobs:
         run: |
           cd ./wrt/
 
-          make -j$(nproc) || make -j1 V=s
+          # make -j$(nproc) || make -j1 V=s
+          make -j$(nproc) 2>&1 || { echo "Compilation failed, retrying with verbose output..."; make -j1 V=s; }
+          
 
       - name: Machine Information
         run: |
