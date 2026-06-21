@@ -87,3 +87,38 @@ echo "root:${ROOT_PWD_HASH}:0:0:99999:7:::" > ./files/etc/shadow
 # 2. 启用 zram-swap 解决编译错误
 echo "CONFIG_PACKAGE_zram-swap=y" >> ./.config
 # ===== 新增内容结束 =====
+
+# ============================================
+# 🐳 强制追加 Docker 配置（如果不存在）
+# ============================================
+if ! grep -q "CONFIG_PACKAGE_docker=y" .config; then
+    cat >> .config << 'EOF'
+CONFIG_PACKAGE_docker=y
+CONFIG_PACKAGE_dockerd=y
+CONFIG_PACKAGE_docker-compose=y
+CONFIG_PACKAGE_containerd=y
+CONFIG_PACKAGE_runc=y
+CONFIG_PACKAGE_luci-app-dockerman=y
+CONFIG_PACKAGE_luci-i18n-dockerman-zh-cn=y
+CONFIG_PACKAGE_luci-lib-docker=y
+CONFIG_PACKAGE_kmod-veth=y
+CONFIG_PACKAGE_kmod-tun=y
+CONFIG_PACKAGE_kmod-ipt-nat=y
+CONFIG_PACKAGE_kmod-nf-ipvs=y
+CONFIG_PACKAGE_kmod-nf-nat=y
+CONFIG_PACKAGE_kmod-nf-conntrack=y
+CONFIG_PACKAGE_kmod-br-netfilter=y
+CONFIG_PACKAGE_kmod-fs-ext4=y
+CONFIG_PACKAGE_kmod-fs-vfat=y
+CONFIG_PACKAGE_e2fsprogs=y
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_bridge-utils=y
+CONFIG_PACKAGE_iptables=y
+CONFIG_PACKAGE_kmod-ipt-nat6=y
+CONFIG_PACKAGE_ttyd=y
+CONFIG_PACKAGE_htop=y
+EOF
+    echo "✅ Docker config appended (was missing)"
+else
+    echo "✅ Docker config already exists, skipping"
+fi
