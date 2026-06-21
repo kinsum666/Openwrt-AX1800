@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2026
+
+name: BUILD_wrt
+
+on:
+  workflow_run:
+    workflows: ["Auto-Clean"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      CONFIG:
+        description: '选择编译配置'
+        required: true
+        type: choice
+        options:
+          - IPQ60XX-WIFI-YES
+          - IPQ60XX-WIFI-NO
+          - IPQ807X-WIFI-YES
+          - IPQ807X-WIFI-NO
+          - MEDIATEK-WIFI-YES
+          - MEDIATEK-WIFI-NO
+          - ROCKCHIP
+          - X86
+          - TEST
+      SOURCE:
+        description: '选择源码仓库（所有者/仓库名）'
+        required: true
+        type: choice
+        options:
+          - VIKINGYFY/immortalwrt
+          - immortalwrt/immortalwrt
+          - LiBwrt/openwrt-6.x
+          - qosmio/openwrt-ipq
+      BRANCH:
+        description: '源码分支'
+        required: true
+        type: string
+        default: 'main'
+      PACKAGE:
+        description: '手动调整插件包，多个请用 \n 符号隔开'
+        required: false
+        type: string
+      TEST:
+        description: '仅输出配置文件，不编译固件'
+        required: true
+        type: boolean
+        default: false
+
+permissions: write-all
+
+jobs:
+  build:
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.CONFIG || 'IPQ60' }}
+    uses: ./.github/workflows/WRT-CORE.yml
+    with:
+      WRT_CONFIG: ${{ github.event_name == 'workflow_dispatch' && inputs.CONFIG || 'IPQ60' }}
+      WRT_THEME: bootstrap
+      WRT_NAME: Chris
+      WRT_SSID: ${{ github.event_name == 'workflow_dispatch' && 'Titok' || 'KWRT' }}
+      WRT_WORD: yunding888
+      WRT_IP: 192.168.188.1
+      WRT_PW: erlang
+      WRT_REPO: https://github.com/${{ github.event_name == 'workflow_dispatch' && inputs.SOURCE || 'VIKINGYFY/immortalwrt' }}.git
+      WRT_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.BRANCH || 'main' }}
+      WRT_SOURCE: ${{ github.event_name == 'workflow_dispatch' && inputs.SOURCE || 'VIKINGYFY/immortalwrt' }}
+      WRT_PACKAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.PACKAGE || '' }}
+      WRT_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.TEST || 'false' }}
