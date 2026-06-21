@@ -113,3 +113,65 @@ cat > ./files/etc/crontabs/root << "EOF"
 # 每天 07:00 开启 LED
 0 7 * * * uci set athena_led.config.enable='1' && uci commit athena_led && /etc/init.d/athena_led reload
 EOF
+
+# ======================== LED 按键控制 ========================
+# 创建 LED 切换脚本
+mkdir -p ./files/etc
+cat > ./files/etc/led_toggle.sh << "EOF"
+#!/bin/sh
+
+LED_STATE_FILE="/tmp/led_state"   # 记录当前 LED 状态（0=关，1=开）
+
+# 关闭所有 LED
+led_off() {
+    for led in /sys/class/leds/*; do
+        [ -e "$led/brightness" ] && echo 0 > "$led/brightness"
+        [ -e "$led/trigger" ] && echo none > "$led/trigger"
+    done
+}
+
+# 开启所有 LED（恢复默认 trigger）
+led_on() {
+    for led in /sys/class/leds/*; do
+        [ -e "$led/trigger" ] && echo default-on > "$led/trigger"
+    done
+}
+
+# 读取当前状态，取反
+if [ -f "$LED_STATE_FILE" ]; then
+    STATE=$(cat "$LED_STATE_FILE")
+else
+    STATE="1"   # 默认开机为开启
+fi
+
+if [ "$STATE" = "1" ]; then
+    led_off
+    echo "0" > "$LED_STATE_FILE"
+else
+    led_on
+    echo "1" > "$LED_STATE_FILE"
+fi
+EOF
+
+chmod +x ./files/etc/led_toggle.sh
+
+# 创建按键监听脚本（hotplug）
+mkdir -p ./files/etc/hotplug.d/button
+cat > ./files/etc/hotplug.d/button/01-mesh-led << "EOF"
+#!/bin/sh
+# 监听 mesh 按键（亚瑟/雅典娜的物理按键）
+# 当按键被按下时，执行 LED 切换
+
+case "$ACTION" in
+    pressed)
+        # 检查是否是该设备对应的按键事件
+        case "$BUTTON" in
+            BTN_MESH|mesh|wps)   # 不同固件可能名称不同，包含常见名称
+                /etc/led_toggle.sh &
+                ;;
+        esac
+        ;;
+esac
+EOF
+
+chmod +x ./files/etc/hotplug.d/button/01-mesh-led
