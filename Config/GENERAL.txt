@@ -173,3 +173,47 @@ CONFIG_PACKAGE_usb-modeswitch=y
 CONFIG_PACKAGE_usbmuxd=y
 CONFIG_PACKAGE_usbutils=y
 CONFIG_PACKAGE_xz-utils=y
+
+# ============================================
+# 🐳 Docker & Docker Compose 完整依赖
+# ============================================
+
+# Docker 核心组件
+CONFIG_PACKAGE_docker=y
+CONFIG_PACKAGE_dockerd=y
+CONFIG_PACKAGE_docker-compose=y
+
+# 容器运行时 (底层依赖)
+CONFIG_PACKAGE_containerd=y
+CONFIG_PACKAGE_runc=y
+
+# LuCI 管理界面及中文支持
+CONFIG_PACKAGE_luci-app-dockerman=y
+CONFIG_PACKAGE_luci-i18n-dockerman-zh-cn=y
+CONFIG_PACKAGE_luci-lib-docker=y
+
+# Docker 必需的内核模块
+CONFIG_PACKAGE_kmod-veth=y          # 容器虚拟网卡，网络必需
+CONFIG_PACKAGE_kmod-tun=y           # TUN/TAP 设备支持
+CONFIG_PACKAGE_kmod-ipt-nat=y       # NAT 网络地址转换
+CONFIG_PACKAGE_kmod-nf-ipvs=y       # IP 虚拟服务器 (负载均衡)
+CONFIG_PACKAGE_kmod-nf-nat=y        # 完整 NAT 支持
+CONFIG_PACKAGE_kmod-nf-conntrack=y  # 连接跟踪
+CONFIG_PACKAGE_kmod-br-netfilter=y  # 桥接网络过滤
+
+# 文件系统与存储支持 (可选但推荐)
+CONFIG_PACKAGE_kmod-fs-ext4=y       # ext4 文件系统 (用于外置存储)
+CONFIG_PACKAGE_kmod-fs-vfat=y       # FAT 文件系统
+CONFIG_PACKAGE_kmod-fs-nfs=y        # NFS 网络文件系统 (挂载远程存储)
+CONFIG_PACKAGE_e2fsprogs=y          # ext4 工具 (格式化/修复)
+CONFIG_PACKAGE_blkid=y              # 块设备 UUID 识别
+
+# 网络工具 (用于排查与调试)
+CONFIG_PACKAGE_ip-full=y            # 完整 ip 命令
+CONFIG_PACKAGE_bridge-utils=y       # 网桥管理
+CONFIG_PACKAGE_iptables=y           # 防火墙规则管理 (Docker 依赖)
+CONFIG_PACKAGE_kmod-ipt-nat6=y      # IPv6 NAT 支持
+
+# 可选但实用的工具
+CONFIG_PACKAGE_ttyd=y               # 网页终端 (通过 LuCI 直接操作 Docker)
+CONFIG_PACKAGE_htop=y               # 进程监控 (查看容器资源占用)
