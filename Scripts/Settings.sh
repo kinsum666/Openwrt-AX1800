@@ -14,6 +14,9 @@ sed -i "s/(\(luciversion || ''\))/(\1) + (' \/Build by Chris @$(TZ=UTC-8 date "+
 # 版本号里显示一个自己的名字（kinsum build $(TZ=UTC-8 date "+%Y.%m.%d") @ 这些都是后增加的）
 sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
 
+# 修改 DISTRIB_DESCRIPTION 中的附加信息
+sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWRT SNAPSHOT \/ LuCI Master \/Build by Chris @$(TZ=UTC-8 date "+%y.%m.%d")'/g" package/lean/default-settings/files/zzz-default-settings
+
 WIFI_SH=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null)
 WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
 if [ -f "$WIFI_SH" ]; then
@@ -121,4 +124,19 @@ EOF
     echo "✅ Docker config appended (was missing)"
 else
     echo "✅ Docker config already exists, skipping"
+fi
+
+# ============================================
+# 🎛️ 修改 athena_led 默认配置
+# ============================================
+ATHENA_CFG="./root/etc/config/athena_led"
+
+if [ -f "$ATHENA_CFG" ]; then
+    # 修改自定义文本（请注意原文件中的引号）
+    sed -i "s/option value '.*'/option value 'Chris love you.'/" "$ATHENA_CFG"
+    # 修改亮度（lightLevel）
+    sed -i "s/option lightLevel '.*'/option lightLevel '3'/" "$ATHENA_CFG"
+    echo "✅ athena_led 配置已修改：文本='Hey,Chris love you!'，亮度=3"
+else
+    echo "⚠️ 未找到 athena_led 配置文件，路径：$ATHENA_CFG"
 fi
