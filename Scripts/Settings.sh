@@ -129,14 +129,14 @@ fi
 # ============================================
 # 🎛️ 修改 athena_led 默认配置
 # ============================================
-ATHENA_CFG="./root/etc/config/athena_led"
+ATHENA_CFG="./files/etc/config/athena_led"
 
 if [ -f "$ATHENA_CFG" ]; then
     # 修改自定义文本（请注意原文件中的引号）
     sed -i "s/option value '.*'/option value 'Chris love you.'/" "$ATHENA_CFG"
     # 修改亮度（lightLevel）
     sed -i "s/option lightLevel '.*'/option lightLevel '3'/" "$ATHENA_CFG"
-    echo "✅ athena_led 配置已修改：文本='Hey,Chris love you!'，亮度=3"
+    echo "✅ athena_led 配置已修改：文本='Chris love you.'，亮度=3"
 else
     echo "⚠️ 未找到 athena_led 配置文件，路径：$ATHENA_CFG"
 fi
