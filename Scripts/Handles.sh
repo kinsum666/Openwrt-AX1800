@@ -23,8 +23,15 @@ fi
 if ! grep -q "src-git openclash" feeds.conf.default; then
     echo "src-git openclash https://github.com/vernesong/OpenClash.git" >> feeds.conf.default
 fi
+
+# ========== 新增 kiddin9 源 ==========
+if ! grep -q "src-git kiddin9" feeds.conf.default; then
+    echo "src-git kiddin9 https://github.com/kiddin9/openwrt-packages.git" >> feeds.conf.default
+    echo "kiddin9 feed added"
+fi
 echo "proxy feeds added"
 # ==========================================
+
 
 # 自定义版本显示
 sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
