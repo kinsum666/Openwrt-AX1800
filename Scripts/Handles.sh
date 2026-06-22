@@ -36,8 +36,9 @@ echo "proxy feeds added"
 # 自定义版本显示
 sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
 
+
 # 预置 HomeProxy 数据（需要用子 shell 隔离）
-iif ls -d *homeproxy* >/dev/null 2>&1; then
+if ls -d *homeproxy* >/dev/null 2>&1; then
     (
         HP_RULE="surge"
         HP_PATH="homeproxy/root/etc/homeproxy"
