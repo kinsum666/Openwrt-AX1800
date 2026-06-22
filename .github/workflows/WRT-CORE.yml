@@ -188,17 +188,26 @@ jobs:
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-
-          make download -j$(nproc)
+          make download -j$(nproc) > download.log 2>&1 || {
+            echo "Download failed. Last 100 lines:"
+            tail -n 100 download.log
+            exit 1
+          }
 
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-
-          # make -j$(nproc) || make -j1 V=s
-          make -j$(nproc) 2>&1 || { echo "Compilation failed, retrying with verbose output..."; make -j1 V=s; }
-          
+          # 编译并重定向输出
+          make -j$(nproc) > build.log 2>&1 || {
+            echo "❌ First attempt failed. Retrying with verbose (V=s)..."
+            make -j1 V=s > build_verbose.log 2>&1
+            echo "Last 300 lines of verbose log:"
+            tail -n 300 build_verbose.log
+            exit 1
+          }
+          # 清理编译日志释放空间
+          rm -rf logs/  
 
       - name: Machine Information
         run: |
