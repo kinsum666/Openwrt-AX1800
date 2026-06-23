@@ -278,3 +278,8 @@ chmod +x ./files/etc/init.d/format_p27
 
 # 启用开机自启
 ln -sf /etc/init.d/format_p27 ./files/etc/rc.d/S95format_p27 2>/dev/null || true
+
+
+# 强制清除 Kconfig 缓存，让下次 defconfig 重新扫描包依赖
+rm -f ./tmp/.config-package.in
+echo "Kconfig cache cleared"
