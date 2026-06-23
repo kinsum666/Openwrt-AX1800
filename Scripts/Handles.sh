@@ -3,12 +3,9 @@
 # Copyright (C) 2026 kinsum
 
 OPENWRT_ROOT="$GITHUB_WORKSPACE/wrt"
-PKG_PATH="$OPENWRT_ROOT/package/"
-
 cd "$OPENWRT_ROOT" || exit 1
 
 # ========== 新增：代理软件 feeds ==========
-# 添加 OAF 源到 feeds.conf.default
 if ! grep -q "openappfilter" feeds.conf.default; then
     echo "src-git openappfilter https://github.com/destan19/OpenAppFilter.git" >> feeds.conf.default
     echo "OAF feed added"
@@ -24,7 +21,6 @@ if ! grep -q "src-git openclash" feeds.conf.default; then
     echo "src-git openclash https://github.com/vernesong/OpenClash.git" >> feeds.conf.default
 fi
 
-# ========== 新增 kiddin9 源 ==========
 if ! grep -q "src-git kiddin9" feeds.conf.default; then
     echo "src-git kiddin9 https://github.com/kiddin9/openwrt-packages.git" >> feeds.conf.default
     echo "kiddin9 feed added"
@@ -32,16 +28,45 @@ fi
 echo "proxy feeds added"
 # ==========================================
 
+# 修改 openwrt_release 中的描述（ImmortalWrt 路径，加存在检查）
+RELEASE_FILE="package/base-files/files/etc/openwrt_release"
+if [ -f "$RELEASE_FILE" ]; then
+    sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWRT \/ LuCI Master \/Build by Kinsum @$(date +%y.%m.%d)'/" "$RELEASE_FILE"
+else
+    echo "⚠️  $RELEASE_FILE not found, skip DISTRIB_DESCRIPTION modification"
+fi
 
-# 自定义版本显示
-sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
+# ========== 修改 banner 登录欢迎信息（防重复） ==========
+BANNER_FILE="package/base-files/files/etc/banner"
+if [ -f "$BANNER_FILE" ]; then
+    if grep -q "Compiled by Kinsum" "$BANNER_FILE"; then
+        echo "Banner already modified, skipping."
+    else
+        cat >> "$BANNER_FILE" << "EOF"
+-----------------------------------------------
+  Firmware: JDC
+  Compiled by Kinsum @ $(TZ=UTC-8 date '+%Y-%m-%d %H:%M:%S')
+-----------------------------------------------
+EOF
+    fi
+else
+    echo "⚠️  $BANNER_FILE not found, skip banner modification"
+fi
 
+# 自定义版本显示（ImmortalWrt 真实文件）
+DEFAULT_SETTINGS="package/emortal/default-settings/files/99-default-settings"
+if [ -f "$DEFAULT_SETTINGS" ]; then
+    sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" "$DEFAULT_SETTINGS"
+else
+    echo "⚠️  $DEFAULT_SETTINGS not found, skip version modification"
+fi
 
-# 预置 HomeProxy 数据（需要用子 shell 隔离）
-if ls -d *homeproxy* >/dev/null 2>&1; then
+# 预置 HomeProxy 数据（路径已修正到 package/ 下）
+if ls -d ./package/*homeproxy* >/dev/null 2>&1; then
     (
+        HP_DIR=$(ls -d ./package/*homeproxy* | head -1)  # 取第一个匹配目录
         HP_RULE="surge"
-        HP_PATH="homeproxy/root/etc/homeproxy"
+        HP_PATH="$HP_DIR/root/etc/homeproxy"
         rm -rf "./$HP_PATH/resources/*"
         git clone -q --depth=1 --single-branch --branch "release" "https://github.com/Loyalsoldier/surge-rules.git" "./$HP_RULE/"
         cd "./$HP_RULE/" || exit
@@ -57,35 +82,38 @@ if ls -d *homeproxy* >/dev/null 2>&1; then
     echo "homeproxy date has been updated!"
 fi
 
-# 修改 argon 主题
-if [ -d *"luci-theme-argon"* ]; then
+# 修改 argon 主题（路径修正）
+if ls -d ./package/*luci-theme-argon* >/dev/null 2>&1; then
+    ARGON_DIR=$(ls -d ./package/*luci-theme-argon* | head -1)
     (
-        cd ./luci-theme-argon/ || exit
+        cd "$ARGON_DIR" || exit
         sed -i "s/primary '.*'/primary '#31a1a1'/; s/'0.2'/'0.5'/; s/'none'/'bing'/; s/'600'/'normal'/" ./luci-app-argon-config/root/etc/config/argon
     )
     echo "theme-argon has been fixed!"
 fi
 
-# 修改 aurora 菜单样式（类似处理，注意路径）
-if [ -d *"luci-app-aurora-config"* ]; then
+# 修改 aurora 菜单样式（路径修正）
+if ls -d ./package/*luci-app-aurora-config* >/dev/null 2>&1; then
+    AURORA_DIR=$(ls -d ./package/*luci-app-aurora-config* | head -1)
     (
-        cd ./luci-app-aurora-config/ || exit
+        cd "$AURORA_DIR" || exit
         sed -i "s/nav_submenu_type '.*'/nav_submenu_type 'boxed-dropdown'/g" $(find ./root/usr/share/aurora/ -type f -name "*.template")
     )
     echo "theme-aurora has been fixed!"
 fi
 
-# 修改 mini-diskmanager 菜单位置
-if [ -d *"luci-app-mini-diskmanager"* ]; then
+# 修改 mini-diskmanager 菜单位置（路径修正）
+if ls -d ./package/*luci-app-mini-diskmanager* >/dev/null 2>&1; then
+    DISKMAN_DIR=$(ls -d ./package/*luci-app-mini-diskmanager* | head -1)
     (
-        cd ./luci-app-mini-diskmanager/ || exit
+        cd "$DISKMAN_DIR" || exit
         sed -i "s/services/system/g" ./luci-app-mini-diskmanager/root/usr/share/luci/menu.d/luci-app-mini-diskmanager.json
     )
     echo "mini-diskmanager has been fixed!"
 fi
 
-# 修改 qca-nss-drv 启动顺序（注意路径是相对 feeds 的）
-NSS_DRV="../feeds/nss_packages/qca-nss-drv/files/qca-nss-drv.init"
+# 修改 qca-nss-drv 启动顺序
+NSS_DRV="./feeds/nss_packages/qca-nss-drv/files/qca-nss-drv.init"
 if [ -f "$NSS_DRV" ]; then
     sed -i 's/START=.*/START=85/g' "$NSS_DRV"
     echo "qca-nss-drv has been fixed!"
@@ -112,8 +140,7 @@ if [ -f "$RUST_FILE" ]; then
     echo "rust has been fixed!"
 fi
 
-
-# 创建 crontab 文件，设置定时开关灯
+# ======================== 定时开关灯 ========================
 mkdir -p ./files/etc/crontabs
 cat > ./files/etc/crontabs/root << "EOF"
 # 每天 23:00 关闭 LED
@@ -122,34 +149,29 @@ cat > ./files/etc/crontabs/root << "EOF"
 0 7 * * * uci set athena_led.config.enable='1' && uci commit athena_led && /etc/init.d/athena_led reload
 EOF
 
-# ======================== LED 按键控制 ========================
-# 创建 LED 切换脚本
+# ======================== LED 按键控制（增强版） ========================
 mkdir -p ./files/etc
 cat > ./files/etc/led_toggle.sh << "EOF"
 #!/bin/sh
+LED_STATE_FILE="/tmp/led_state"
 
-LED_STATE_FILE="/tmp/led_state"   # 记录当前 LED 状态（0=关，1=开）
-
-# 关闭所有 LED
 led_off() {
     for led in /sys/class/leds/*; do
-        [ -e "$led/brightness" ] && echo 0 > "$led/brightness"
-        [ -e "$led/trigger" ] && echo none > "$led/trigger"
+        [ -e "$led/brightness" ] && echo 0 > "$led/brightness" 2>/dev/null
+        [ -e "$led/trigger" ] && echo none > "$led/trigger" 2>/dev/null
     done
 }
 
-# 开启所有 LED（恢复默认 trigger）
 led_on() {
     for led in /sys/class/leds/*; do
-        [ -e "$led/trigger" ] && echo default-on > "$led/trigger"
+        [ -e "$led/trigger" ] && echo default-on > "$led/trigger" 2>/dev/null
     done
 }
 
-# 读取当前状态，取反
 if [ -f "$LED_STATE_FILE" ]; then
     STATE=$(cat "$LED_STATE_FILE")
 else
-    STATE="1"   # 默认开机为开启
+    STATE="1"
 fi
 
 if [ "$STATE" = "1" ]; then
@@ -160,26 +182,28 @@ else
     echo "1" > "$LED_STATE_FILE"
 fi
 EOF
-
 chmod +x ./files/etc/led_toggle.sh
 
-# 创建按键监听脚本（hotplug）
 mkdir -p ./files/etc/hotplug.d/button
 cat > ./files/etc/hotplug.d/button/01-mesh-led << "EOF"
 #!/bin/sh
-# 监听 mesh 按键（亚瑟/雅典娜的物理按键）
-# 当按键被按下时，执行 LED 切换
+# 按键 LED 开关（防抖，适配所有常见键值）
 
 case "$ACTION" in
     pressed)
-        # 检查是否是该设备对应的按键事件
+        LAST=$(cat /tmp/button_last_time 2>/dev/null)
+        NOW=$(cut -d '.' -f 1 /proc/uptime)
+        if [ -n "$LAST" ] && [ $((NOW - LAST)) -lt 1 ]; then
+            exit 0
+        fi
+        echo "$NOW" > /tmp/button_last_time
+
         case "$BUTTON" in
-            BTN_MESH|mesh|wps)   # 不同固件可能名称不同，包含常见名称
+            BTN_*|mesh|wps|reset)
                 /etc/led_toggle.sh &
                 ;;
         esac
         ;;
 esac
 EOF
-
 chmod +x ./files/etc/hotplug.d/button/01-mesh-led
