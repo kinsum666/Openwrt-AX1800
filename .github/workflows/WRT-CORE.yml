@@ -197,18 +197,21 @@ jobs:
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
         run: |
-          cd ./wrt/
-          # 编译并重定向输出
+         cd ./wrt/
           make -j$(nproc) > build.log 2>&1 || {
-            echo "❌ First attempt failed. Retrying with verbose (V=s)..."
-            make -j1 V=s > build_verbose.log 2>&1
-            echo "Last 300 lines of verbose log:"
-            tail -n 300 build_verbose.log
-            exit 1
-          }
-          # 清理编译日志释放空间
-          rm -rf logs/  
-
+           echo "❌ First attempt failed. Last 300 lines of build.log:"
+           tail -n 300 build.log
+           echo ""
+           echo "Retrying with verbose (V=s)..."
+           make -j1 V=s > build_verbose.log 2>&1 || true   # 即使失败也继续
+           echo "Last 300 lines of verbose log:"
+           tail -n 300 build_verbose.log
+           exit 1
+         }
+          # 清理编译日志释放空间  
+          rm -rf logs/
+         
+     
       - name: Machine Information
         run: |
           cd ./wrt/
