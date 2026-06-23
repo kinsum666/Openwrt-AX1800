@@ -18,6 +18,7 @@
  ../scripts/feeds install -a -p istore
  ../scripts/feeds install -a -p nas
  ../scripts/feeds install -a -p nas_luci
+ ../scripts/feeds uninstall ddnsto 2>/dev/null || true
 
  echo "iStore feeds 安装完成"
 
