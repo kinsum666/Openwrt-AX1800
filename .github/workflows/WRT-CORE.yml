@@ -149,12 +149,12 @@ jobs:
           fi
 
       # Add OAF Feed ===========
-      - name: Add OAF Feed
-        run: |
-          cd ./wrt/
-          if ! grep -q "openappfilter" feeds.conf.default; then
-            echo "src-git openappfilter https://github.com/destan19/OpenAppFilter.git" >> feeds.conf.default
-          fi
+      # - name: Add OAF Feed
+       #  run: |
+      #     cd ./wrt/
+     #      if ! grep -q "openappfilter" feeds.conf.default; then
+      #       echo "src-git openappfilter https://github.com/destan19/OpenAppFilter.git" >> feeds.conf.default
+     #     fi
      #=================
       - name: Update Feeds
         run: |
@@ -203,7 +203,7 @@ jobs:
            tail -n 300 build.log
            echo ""
            echo "Retrying with verbose (V=s)..."
-           make -j1 V=s > build_verbose.log 2>&1 || true   # 即使失败也继续
+           make -j1 V=s > build_verbose.log 2>&1 || true
            echo "Last 300 lines of verbose log:"
            tail -n 300 build_verbose.log
            exit 1
