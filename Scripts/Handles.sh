@@ -216,3 +216,63 @@ if [ -x "$DOCKER_FIX" ]; then
 else
     echo "⚠️ Docker nftables fix script not found or not executable, skipping."
 fi
+
+# ========== 京东云 eMMC p27 首次格式化 + 自动挂载 ==========
+mkdir -p ./files/etc/init.d
+cat > ./files/etc/init.d/format_p27 << 'EOF'
+#!/bin/sh /etc/rc.common
+# 京东云雅典娜/亚瑟 eMMC p27 分区格式化并挂载
+# 首次启动时格式化为 ext4，后续启动只挂载
+
+START=95
+STOP=10
+
+PARTITION="/dev/mmcblk0p27"
+MOUNT_POINT="/opt"
+FS_TYPE="ext4"
+STAMP="/etc/.p27_formatted"
+
+start() {
+    # 检查分区是否存在
+    if [ ! -b "$PARTITION" ]; then
+        logger -t "format_p27" "Partition $PARTITION not found, exit."
+        return 1
+    fi
+
+    # 检查是否已经挂载，若已挂载则跳过
+    if mount | grep -q "$PARTITION"; then
+        logger -t "format_p27" "$PARTITION already mounted, nothing to do."
+        return 0
+    fi
+
+    # 如果标记文件不存在，说明是首次启动，执行格式化
+    if [ ! -f "$STAMP" ]; then
+        logger -t "format_p27" "First boot detected, formatting $PARTITION to $FS_TYPE..."
+        echo "y" | mkfs.ext4 "$PARTITION" || {
+            logger -t "format_p27" "Format failed!"
+            return 1
+        }
+        touch "$STAMP"
+        logger -t "format_p27" "Format complete, stamp created."
+    else
+        logger -t "format_p27" "Already formatted, mounting..."
+    fi
+
+    # 挂载分区
+    mkdir -p "$MOUNT_POINT"
+    mount -t "$FS_TYPE" "$PARTITION" "$MOUNT_POINT" || {
+        logger -t "format_p27" "Mount failed!"
+        return 1
+    }
+    logger -t "format_p27" "Mounted $PARTITION to $MOUNT_POINT"
+
+    # 写入 fstab（仅首次，避免重复条目）
+    if ! grep -q "$PARTITION" /etc/fstab; then
+        echo "$PARTITION $MOUNT_POINT $FS_TYPE defaults 0 0" >> /etc/fstab
+    fi
+}
+EOF
+chmod +x ./files/etc/init.d/format_p27
+
+# 启用开机自启
+ln -sf /etc/init.d/format_p27 ./files/etc/rc.d/S95format_p27 2>/dev/null || true
