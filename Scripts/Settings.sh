@@ -14,8 +14,8 @@ sed -i "s/(\(luciversion || ''\))/(\1) + (' \/Build by Kinsum @$(TZ=UTC-8 date "
 # ⚠️ 原两行 sed 现在先判断文件是否存在，避免因找不到文件而脚本中断
 DEFAULT_SETTINGS="package/lean/default-settings/files/zzz-default-settings"
 if [ -f "$DEFAULT_SETTINGS" ]; then
-    sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" "$DEFAULT_SETTINGS"
-    sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWRT SNAPSHOT \/ LuCI Master \/Build by Chris @$(TZ=UTC-8 date "+%y.%m.%d")'/g" "$DEFAULT_SETTINGS"
+    sed -i "s/OpenWrt /Kinsum Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" "$DEFAULT_SETTINGS"
+    sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWRT SNAPSHOT \/ LuCI Master \/Build by Kinsum @$(TZ=UTC-8 date "+%y.%m.%d")'/g" "$DEFAULT_SETTINGS"
 else
     echo "⚠️  $DEFAULT_SETTINGS not found, skip version modification"
 fi
@@ -140,9 +140,9 @@ fi
 ATHENA_CFG="./files/etc/config/athena_led"
 
 if [ -f "$ATHENA_CFG" ]; then
-    sed -i "s/option value '.*'/option value 'Chris love you.'/" "$ATHENA_CFG"
+    sed -i "s/option value '.*'/option value 'Kinsum love you.'/" "$ATHENA_CFG"
     sed -i "s/option lightLevel '.*'/option lightLevel '3'/" "$ATHENA_CFG"
-    echo "✅ athena_led 配置已修改：文本='Chris love you.'，亮度=3"
+    echo "✅ athena_led 配置已修改：文本='Kinsum love you.'，亮度=3"
 else
     echo "⚠️ 未找到 athena_led 配置文件，路径：$ATHENA_CFG"
 fi
