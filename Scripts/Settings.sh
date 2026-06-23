@@ -158,3 +158,5 @@ echo "# CONFIG_PACKAGE_mihomo-alpha is not set" >> .config
 echo "# CONFIG_PACKAGE_mihomo-meta is not set" >> .config
 echo "# CONFIG_PACKAGE_kmod-oaf is not set" >> .config
 echo "🔧 Recursive dependency items cleared"
+
+sed -i '/CONFIG_PACKAGE_ddnsto/d' .config
