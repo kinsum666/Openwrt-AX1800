@@ -123,6 +123,11 @@ CONFIG_PACKAGE_iptables=y
 CONFIG_PACKAGE_kmod-ipt-nat6=y
 CONFIG_PACKAGE_ttyd=y
 CONFIG_PACKAGE_htop=y
+CONFIG_PACKAGE_kmod-fs-overlay=y
+CONFIG_PACKAGE_kmod-nft-core=y
+CONFIG_PACKAGE_kmod-nft-nat=y
+CONFIG_PACKAGE_kmod-nft-bridge=y
+CONFIG_PACKAGE_kmod-nf-nat6=y
 EOF
     echo "✅ Docker config appended (was missing)"
 else
