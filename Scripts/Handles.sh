@@ -207,3 +207,12 @@ case "$ACTION" in
 esac
 EOF
 chmod +x ./files/etc/hotplug.d/button/01-mesh-led
+
+# ========== Docker nftables 兼容修复 ==========
+DOCKER_FIX="$GITHUB_WORKSPACE/Scripts/docker_nftables_fix.sh"
+if [ -x "$DOCKER_FIX" ]; then
+    echo "Applying Docker nftables compat fixes..."
+    "$DOCKER_FIX" "$OPENWRT_ROOT" || echo "⚠️ Docker nftables fix failed, but continuing..."
+else
+    echo "⚠️ Docker nftables fix script not found or not executable, skipping."
+fi
