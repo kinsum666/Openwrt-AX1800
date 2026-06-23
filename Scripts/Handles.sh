@@ -28,7 +28,7 @@ fi
 echo "proxy feeds added"
 # ==========================================
 
-# 修改 openwrt_release 中的描述（ImmortalWrt 路径，加存在检查）
+# 修改 openwrt_release 中的描述
 RELEASE_FILE="package/base-files/files/etc/openwrt_release"
 if [ -f "$RELEASE_FILE" ]; then
     sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWRT \/ LuCI Master \/Build by Kinsum @$(date +%y.%m.%d)'/" "$RELEASE_FILE"
@@ -61,10 +61,10 @@ else
     echo "⚠️  $DEFAULT_SETTINGS not found, skip version modification"
 fi
 
-# 预置 HomeProxy 数据（路径已修正到 package/ 下）
+# 预置 HomeProxy 数据
 if ls -d ./package/*homeproxy* >/dev/null 2>&1; then
     (
-        HP_DIR=$(ls -d ./package/*homeproxy* | head -1)  # 取第一个匹配目录
+        HP_DIR=$(ls -d ./package/*homeproxy* | head -1)
         HP_RULE="surge"
         HP_PATH="$HP_DIR/root/etc/homeproxy"
         rm -rf "./$HP_PATH/resources/*"
@@ -82,7 +82,7 @@ if ls -d ./package/*homeproxy* >/dev/null 2>&1; then
     echo "homeproxy date has been updated!"
 fi
 
-# 修改 argon 主题（路径修正）
+# 修改 argon 主题
 if ls -d ./package/*luci-theme-argon* >/dev/null 2>&1; then
     ARGON_DIR=$(ls -d ./package/*luci-theme-argon* | head -1)
     (
@@ -92,7 +92,7 @@ if ls -d ./package/*luci-theme-argon* >/dev/null 2>&1; then
     echo "theme-argon has been fixed!"
 fi
 
-# 修改 aurora 菜单样式（路径修正）
+# 修改 aurora 菜单样式
 if ls -d ./package/*luci-app-aurora-config* >/dev/null 2>&1; then
     AURORA_DIR=$(ls -d ./package/*luci-app-aurora-config* | head -1)
     (
@@ -102,7 +102,7 @@ if ls -d ./package/*luci-app-aurora-config* >/dev/null 2>&1; then
     echo "theme-aurora has been fixed!"
 fi
 
-# 修改 mini-diskmanager 菜单位置（路径修正）
+# 修改 mini-diskmanager 菜单位置
 if ls -d ./package/*luci-app-mini-diskmanager* >/dev/null 2>&1; then
     DISKMAN_DIR=$(ls -d ./package/*luci-app-mini-diskmanager* | head -1)
     (
@@ -208,11 +208,21 @@ esac
 EOF
 chmod +x ./files/etc/hotplug.d/button/01-mesh-led
 
-# ========== Docker nftables 兼容修复 ==========
+# ========== 彻底移除导致 Kconfig 递归依赖的包 ==========
+rm -rf ./package/feeds/kenzok8/mihomo-alpha ./package/feeds/kenzok8/mihomo-meta 2>/dev/null
+rm -rf ./package/feeds/small/mihomo-alpha ./package/feeds/small/mihomo-meta 2>/dev/null
+rm -rf ./package/feeds/openappfilter/kmod-oaf 2>/dev/null
+rm -rf ./feeds/openappfilter/kmod-oaf 2>/dev/null
+echo "Recursive dependency source packages removed"
+
+# ========== Docker nftables 兼容修复（带日志捕获） ==========
 DOCKER_FIX="$GITHUB_WORKSPACE/Scripts/docker_nftables_fix.sh"
 if [ -x "$DOCKER_FIX" ]; then
     echo "Applying Docker nftables compat fixes..."
-    "$DOCKER_FIX" "$OPENWRT_ROOT" || echo "⚠️ Docker nftables fix failed, but continuing..."
+    "$DOCKER_FIX" "$OPENWRT_ROOT" > /tmp/docker_fix.log 2>&1 || {
+        echo "⚠️ Docker nftables fix failed! Last 50 lines of log:"
+        tail -n 50 /tmp/docker_fix.log
+    }
 else
     echo "⚠️ Docker nftables fix script not found or not executable, skipping."
 fi
@@ -221,9 +231,6 @@ fi
 mkdir -p ./files/etc/init.d
 cat > ./files/etc/init.d/format_p27 << 'EOF'
 #!/bin/sh /etc/rc.common
-# 京东云雅典娜/亚瑟 eMMC p27 分区格式化并挂载
-# 首次启动时格式化为 ext4，后续启动只挂载
-
 START=95
 STOP=10
 
@@ -233,19 +240,16 @@ FS_TYPE="ext4"
 STAMP="/etc/.p27_formatted"
 
 start() {
-    # 检查分区是否存在
     if [ ! -b "$PARTITION" ]; then
         logger -t "format_p27" "Partition $PARTITION not found, exit."
         return 1
     fi
 
-    # 检查是否已经挂载，若已挂载则跳过
     if mount | grep -q "$PARTITION"; then
         logger -t "format_p27" "$PARTITION already mounted, nothing to do."
         return 0
     fi
 
-    # 如果标记文件不存在，说明是首次启动，执行格式化
     if [ ! -f "$STAMP" ]; then
         logger -t "format_p27" "First boot detected, formatting $PARTITION to $FS_TYPE..."
         echo "y" | mkfs.ext4 "$PARTITION" || {
@@ -258,7 +262,6 @@ start() {
         logger -t "format_p27" "Already formatted, mounting..."
     fi
 
-    # 挂载分区
     mkdir -p "$MOUNT_POINT"
     mount -t "$FS_TYPE" "$PARTITION" "$MOUNT_POINT" || {
         logger -t "format_p27" "Mount failed!"
@@ -266,7 +269,6 @@ start() {
     }
     logger -t "format_p27" "Mounted $PARTITION to $MOUNT_POINT"
 
-    # 写入 fstab（仅首次，避免重复条目）
     if ! grep -q "$PARTITION" /etc/fstab; then
         echo "$PARTITION $MOUNT_POINT $FS_TYPE defaults 0 0" >> /etc/fstab
     fi
