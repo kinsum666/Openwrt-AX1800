@@ -11,11 +11,14 @@ sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-m
 #添加编译日期标识
 sed -i "s/(\(luciversion || ''\))/(\1) + (' \/Build by Chris @$(TZ=UTC-8 date "+%y.%m.%d")')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
 
-# 版本号里显示一个自己的名字（kinsum build $(TZ=UTC-8 date "+%Y.%m.%d") @ 这些都是后增加的）
-sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
-
-# 修改 DISTRIB_DESCRIPTION 中的附加信息
-sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWRT SNAPSHOT \/ LuCI Master \/Build by Chris @$(TZ=UTC-8 date "+%y.%m.%d")'/g" package/lean/default-settings/files/zzz-default-settings
+# ⚠️ 原两行 sed 现在先判断文件是否存在，避免因找不到文件而脚本中断
+DEFAULT_SETTINGS="package/lean/default-settings/files/zzz-default-settings"
+if [ -f "$DEFAULT_SETTINGS" ]; then
+    sed -i "s/OpenWrt /Chris Build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" "$DEFAULT_SETTINGS"
+    sed -i "s/DISTRIB_DESCRIPTION='.*'/DISTRIB_DESCRIPTION='ImmortalWRT SNAPSHOT \/ LuCI Master \/Build by Chris @$(TZ=UTC-8 date "+%y.%m.%d")'/g" "$DEFAULT_SETTINGS"
+else
+    echo "⚠️  $DEFAULT_SETTINGS not found, skip version modification"
+fi
 
 WIFI_SH=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null)
 WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
@@ -132,11 +135,21 @@ fi
 ATHENA_CFG="./files/etc/config/athena_led"
 
 if [ -f "$ATHENA_CFG" ]; then
-    # 修改自定义文本（请注意原文件中的引号）
     sed -i "s/option value '.*'/option value 'Chris love you.'/" "$ATHENA_CFG"
-    # 修改亮度（lightLevel）
     sed -i "s/option lightLevel '.*'/option lightLevel '3'/" "$ATHENA_CFG"
     echo "✅ athena_led 配置已修改：文本='Chris love you.'，亮度=3"
 else
     echo "⚠️ 未找到 athena_led 配置文件，路径：$ATHENA_CFG"
 fi
+
+# ============================================
+# 🔧 修复递归依赖导致 defconfig 失败
+# ============================================
+# 移除已知的冲突选项（mihomo / kmod-oaf）
+# 注意：这会使这些包不被编译，如需使用请等待上游修复 Kconfig
+sed -i '/CONFIG_PACKAGE_mihomo/d' .config
+sed -i '/CONFIG_PACKAGE_kmod-oaf/d' .config
+echo "# CONFIG_PACKAGE_mihomo-alpha is not set" >> .config
+echo "# CONFIG_PACKAGE_mihomo-meta is not set" >> .config
+echo "# CONFIG_PACKAGE_kmod-oaf is not set" >> .config
+echo "🔧 Recursive dependency items cleared"
