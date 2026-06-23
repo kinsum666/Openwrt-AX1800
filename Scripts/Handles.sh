@@ -6,17 +6,11 @@ OPENWRT_ROOT="$GITHUB_WORKSPACE/wrt"
 cd "$OPENWRT_ROOT" || exit 1
 
 # ========== 新增：代理软件 feeds ==========
-if ! grep -q "openappfilter" feeds.conf.default; then
-    echo "src-git openappfilter https://github.com/destan19/OpenAppFilter.git" >> feeds.conf.default
-    echo "OAF feed added"
-fi
 
 if ! grep -q "src-git kenzok8" feeds.conf.default; then
     echo "src-git kenzok8 https://github.com/kenzok8/openwrt-packages.git" >> feeds.conf.default
 fi
-if ! grep -q "src-git small" feeds.conf.default; then
-    echo "src-git small https://github.com/kenzok8/small.git" >> feeds.conf.default
-fi
+
 if ! grep -q "src-git openclash" feeds.conf.default; then
     echo "src-git openclash https://github.com/vernesong/OpenClash.git" >> feeds.conf.default
 fi
@@ -283,3 +277,17 @@ ln -sf /etc/init.d/format_p27 ./files/etc/rc.d/S95format_p27 2>/dev/null || true
 # 强制清除 Kconfig 缓存，让下次 defconfig 重新扫描包依赖
 rm -f ./tmp/.config-package.in
 echo "Kconfig cache cleared"
+
+
+# 强制删除可能残留的冲突包（无论是否存在）
+rm -rf ./feeds/small/mihomo-alpha ./feeds/small/mihomo-meta 2>/dev/null
+rm -rf ./feeds/kenzok8/mihomo-alpha ./feeds/kenzok8/mihomo-meta 2>/dev/null
+rm -rf ./feeds/openappfilter 2>/dev/null
+
+rm -rf ./package/feeds/small/mihomo-alpha ./package/feeds/small/mihomo-meta 2>/dev/null
+rm -rf ./package/feeds/kenzok8/mihomo-alpha ./package/feeds/kenzok8/mihomo-meta 2>/dev/null
+rm -rf ./package/feeds/openappfilter 2>/dev/null
+
+# 清除 Kconfig 缓存
+rm -f ./tmp/.config-package.in
+echo "Recursive dependency source removed & Kconfig cache cleared"
