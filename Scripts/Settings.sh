@@ -160,3 +160,8 @@ echo "# CONFIG_PACKAGE_kmod-oaf is not set" >> .config
 echo "🔧 Recursive dependency items cleared"
 
 sed -i '/CONFIG_PACKAGE_ddnsto/d' .config
+
+# 强制禁用 ddnsto，避免下载失败
+echo "CONFIG_PACKAGE_ddnsto=n" >> .config
+echo "CONFIG_PACKAGE_luci-app-ddnsto=n" >> .config
+
