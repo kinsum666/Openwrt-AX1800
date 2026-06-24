@@ -211,9 +211,14 @@ rm -rf ./package/feeds/small/mihomo-alpha ./package/feeds/small/mihomo-meta 2>/d
 rm -rf ./package/feeds/kenzok8/mihomo-alpha ./package/feeds/kenzok8/mihomo-meta 2>/dev/null
 rm -rf ./package/feeds/openappfilter 2>/dev/null
 
+
 # 强制清除 Kconfig 缓存，防止遗留递归依赖符号
 rm -f ./tmp/.config-package.in
 echo "Recursive dependency source packages removed & Kconfig cache cleared"
+
+# 彻底移除 ddnsto（防止下载失败）
+rm -rf ./feeds/nas/network/services/ddnsto 2>/dev/null
+echo "ddnsto source removed"
 
 # ========== Docker nftables 兼容修复（带日志捕获） ==========
 DOCKER_FIX="$GITHUB_WORKSPACE/Scripts/docker_nftables_fix.sh"
