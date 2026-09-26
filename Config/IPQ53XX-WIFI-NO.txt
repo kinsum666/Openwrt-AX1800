@@ -3,5 +3,23 @@ CONFIG_TARGET_qualcommbe=y
 CONFIG_TARGET_qualcommbe_ipq53xx=y
 #设备列表
 CONFIG_TARGET_DEVICE_qualcommbe_ipq53xx_DEVICE_jdcloud_re-cs-08=y
-CONFIG_TARGET_DEVICE_qualcommbe_ipq53xx_DEVICE_xiaomi_be3600-pro-wired-p5=y
-CONFIG_TARGET_DEVICE_qualcommbe_ipq53xx_DEVICE_xiaomi_be3600-pro-wired-p8=y
+DEVICE_PACKAGES := -kmod-ath11k -wpad-full-openssl -hostapd -iw -iwinfo
+
+
+#设备平台
+CONFIG_TARGET_qualcommbe=y
+CONFIG_TARGET_qualcommbe_ipq53xx=y
+
+#设备列表
+CONFIG_TARGET_DEVICE_qualcommbe_ipq53xx_DEVICE_jdcloud_re-cs-08=y
+
+# 禁用无用的 Wi-Fi 包（太乙plus 没有 Wi-Fi）
+# CONFIG_PACKAGE_wpad-full-openssl is not set
+# CONFIG_PACKAGE_wpad-basic-mbedtls is not set
+# CONFIG_PACKAGE_wpad-openssl is not set
+# CONFIG_PACKAGE_wpad-mbedtls is not set
+# CONFIG_PACKAGE_hostapd is not set
+# CONFIG_PACKAGE_kmod-ath11k is not set
+# CONFIG_PACKAGE_kmod-ath12k is not set
+# CONFIG_PACKAGE_iw is not set
+# CONFIG_PACKAGE_iwinfo is not set
