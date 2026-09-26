@@ -1,6 +1,39 @@
 #!/bin/bash
 # SPDX-License-Identifier: MIT
-# Copyright (C) 2026 VIKINGYFY
+# 
+#=====================
+
+setup_banner() {
+    local build_root="$1"
+    local banner_file="$build_root/package/base-files/files/etc/banner"
+    mkdir -p "$(dirname "$banner_file")"
+    local date_str="$(date '+%Y-%m-%d ')"   # 提前获取日期字符串
+
+    # 使用 << 'EOF' 禁用所有展开，但日期通过变量单独插入
+    cat > "$banner_file" << 'EOF'
+--------------------------------------------------------
+Welcome to...
+--------------------------------------------------------
+
+,--.    ,--.                                  
+|  |,-. `--',--,--,  ,---. ,--.,--.,--,--,--. 
+|     / ,--.|      \(  .-' |  ||  ||        | 
+|  \  \ |  ||  ||  |.-'  ')'  ''  '|  |  |  | 
+`--'`--'`--'`--''--'`----'  `----' `--`--`--'            
+                                                        
+--------------------------------------------------------
+  Firmware compiled by Kinsum @ DATE_PLACEHOLDER
+--------------------------------------------------------
+EOF
+
+    # 替换日期占位符
+    sed -i "s/DATE_PLACEHOLDER/$date_str/" "$banner_file"
+}
+
+#====================================
+
+
+
 
 # 移除luci-app-attendedsysupgrade
 sed -i "/attendedsysupgrade/d" $(find ./feeds/luci/collections/ -type f -name "Makefile")
@@ -140,6 +173,11 @@ if [ -f "$ATHENA_CFG" ]; then
 else
     echo "⚠️ 未找到 athena_led 配置文件，路径：$ATHENA_CFG"
 fi
+
+
+# ========== 设置自定义 banner ==========
+setup_banner "$PWD"
+echo "✅ 自定义 banner 已写入 files/etc/banner"
 
 # ========== 修复递归依赖导致 defconfig 失败 ==========
 sed -i '/CONFIG_PACKAGE_mihomo/d' .config
