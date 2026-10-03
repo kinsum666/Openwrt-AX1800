@@ -21,6 +21,7 @@ on:
           - IPQ807X-WIFI-NO
           - MEDIATEK-WIFI-YES
           - MEDIATEK-WIFI-NO
+          - IPQ53XX-WIFI-NO
           - ROCKCHIP
           - X86
           - TEST
